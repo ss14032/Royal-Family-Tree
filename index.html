@@ -1,24 +1,21 @@
 <!DOCTYPE html>
 <html>
-<body>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Org Chart Editor</title>
+<meta name="description" content="An organization chart editor -- edit details and change relationships." />
+<!-- Copyright 1998-2018 by Northwoods Software Corporation. -->
+<meta charset="UTF-8">
+<script src="../release/go.js"></script>
+<script src="../assets/js/goSamples.js"></script>  <!-- this is only for the GoJS Samples framework -->
 
-<h1>My First Heading</h1>
-<p>My first paragraph.</p>
-  <select name="raidlist" form="raidlist" id="raidlist">
-  <option value="raid0">RAID0</option>
-  <option value="raid1">RAID1</option>
-  <option value="raid2">RAID2</option>
-  <option value="raid3">RAID3</option>
-  <option value="raid4">RAID4</option>
-  <option value="raid5">RAID5</option>
-  <option value="raid6">RAID6</option>
-</select>
-<script>
+<link rel="stylesheet" href="../extensions/dataInspector.css" />
+<script src="../extensions/dataInspector.js"></script>
 
-function init() {
+<script id="code">
+  function init() {
     if (window.goSamples) goSamples();  // init for these samples -- you don't need to call this
     var $ = go.GraphObject.make;  // for conciseness in defining templates
-
     myDiagram =
       $(go.Diagram, "myDiagramDiv", // must be the ID or reference to div
         {
@@ -50,7 +47,6 @@ function init() {
               }),
           "undoManager.isEnabled": true // enable undo & redo
         });
-
     // when the document is modified, add a "*" to the title and enable the "Save" button
     myDiagram.addDiagramListener("Modified", function(e) {
       var button = document.getElementById("SaveButton");
@@ -62,7 +58,6 @@ function init() {
         if (idx >= 0) document.title = document.title.substr(0, idx);
       }
     });
-
     // manage boss info manually when a node or link is deleted from the diagram
     myDiagram.addDiagramListener("SelectionDeleting", function(e) {
       var part = e.subject.first(); // e.subject is the myDiagram.selection collection,
@@ -84,10 +79,8 @@ function init() {
       }
       myDiagram.commitTransaction("clear boss");
     });
-
     var levelColors = ["#AC193D", "#2672EC", "#8C0095", "#5133AB",
                        "#008299", "#D24726", "#008A00", "#094AB2"];
-
     // override TreeLayout.commitNodes to also modify the background brush based on the tree depth level
     myDiagram.layout.commitNodes = function() {
       go.TreeLayout.prototype.commitNodes.call(myDiagram.layout);  // do the standard behavior
@@ -102,7 +95,6 @@ function init() {
         }
       });
     };
-
     // This function is used to find a suitable ID when modifying/creating nodes.
     // We used the counter combined with findNodeDataForKey to ensure uniqueness.
     function getNextKey() {
@@ -112,9 +104,7 @@ function init() {
       }
       return key;
     }
-
     var nodeIdCounter = -1; // use a sequence to guarantee key uniqueness as we add/remove/modify nodes
-
     // when a node is double-clicked, add a child to it
     function nodeDoubleClick(e, obj) {
       var clicked = obj.part;
@@ -126,7 +116,6 @@ function init() {
         myDiagram.commitTransaction("add employee");
       }
     }
-
     // this is used to determine feedback during drags
     function mayWorkFor(node1, node2) {
       if (!(node1 instanceof go.Node)) return false;  // must be a Node
@@ -134,19 +123,16 @@ function init() {
       if (node2.isInTreeOf(node1)) return false;  // cannot work for someone who works for you
       return true;
     }
-
     // This function provides a common style for most of the TextBlocks.
     // Some of these values may be overridden in a particular TextBlock.
     function textStyle() {
       return { font: "9pt  Segoe UI,sans-serif", stroke: "white" };
     }
-
     // This converter is used by the Picture.
     function findHeadShot(key) {
       if (key < 0 || key > 16) return "images/HSnopic.png"; // There are only 16 images on the server
       return "images/HS" + key + ".png"
     }
-
     // define the Node template
     myDiagram.nodeTemplate =
       $(go.Node, "Auto",
@@ -245,7 +231,6 @@ function init() {
           )  // end Table Panel
         ) // end Horizontal Panel
       );  // end Node
-
     // the context menu allows users to make a position vacant,
     // remove a role and reassign the subtree, or remove a department
     myDiagram.nodeTemplate.contextMenu =
@@ -303,17 +288,13 @@ function init() {
           }
         )
       );
-
     // define the Link template
     myDiagram.linkTemplate =
       $(go.Link, go.Link.Orthogonal,
         { corner: 5, relinkableFrom: true, relinkableTo: true },
         $(go.Shape, { strokeWidth: 4, stroke: "#00a4a4" }));  // the link shape
-
     // read in the JSON-format data from the "mySavedModel" element
     load();
-
-
     // support editing the properties of the selected person in HTML
     if (window.Inspector) myInspector = new Inspector("myInspector", myDiagram,
       {
@@ -323,7 +304,6 @@ function init() {
         }
       });
   }
-
   // Show the diagram's model in JSON format
   function save() {
     document.getElementById("mySavedModel").value = myDiagram.model.toJson();
@@ -332,9 +312,10 @@ function init() {
   function load() {
     myDiagram.model = go.Model.fromJson(document.getElementById("mySavedModel").value);
   }
-
 </script>
-  <div id="sample">
+</head>
+<body onload="init()">
+<div id="sample">
   <div id="myDiagramDiv" style="background-color: #696969; border: solid 1px black; height: 500px"></div>
   <div>
     <div id="myInspector">
@@ -352,14 +333,14 @@ function init() {
     Drag a node onto another in order to change relationships.
     You can also draw a link from a node's background to other nodes that have no "boss". Links can also be relinked to change relationships.
     Right-click or tap-hold a Node to bring up a context menu which allows you to:
-    </p><ul>
+    <ul>
       <li>Vacate Position - remove the information specfic to the current person in that role</li>
       <li>Remove Role - removes the role entirely and reparents any children</li>
       <li>Remove Department - removes the role and the whole subtree</li>
     </ul>
     Deleting a Node or Link will orphan the child Nodes and generate a new tree. A custom SelectionDeleting <a>DiagramEvent</a> listener will clear out the boss info
     when the parent is removed.
-  <p></p>
+  </p>
   <p>
     Select a node to edit/update node data values. This sample uses the <a href="../extensions/dataInspector.html">Data Inspector</a> extension to display and modify Part data.
   </p>
@@ -377,7 +358,8 @@ function init() {
       <button onclick="load()">Load</button>
       Diagram Model saved in JSON format:
     </div>
-    <textarea id="mySavedModel" style="width:100%;height:250px">{ "class": "go.TreeModel",
+    <textarea id="mySavedModel" style="width:100%;height:250px">
+{ "class": "go.TreeModel",
   "nodeDataArray": [
 {"key":1, "name":"Stella Payne Diaz", "title":"CEO"},
 {"key":2, "name":"Luke Warm", "title":"VP Marketing/Sales", "parent":1},
@@ -400,6 +382,5 @@ function init() {
     </textarea>
   </div>
 </div>
-  
-</html>
 </body>
+</html>
